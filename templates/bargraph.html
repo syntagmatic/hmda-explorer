@@ -1,0 +1,38 @@
+<html>
+  <style>
+    body {
+      font-family: Consolas, Menlo, Monospace;
+    }
+  </style>
+  <h3>Breakdown by {{ data.field }}</h3>
+
+  <canvas id="bargraph" height="100" width="500"></canvas>
+  <p>
+    <strong>Query</strong><br/>
+    {{ data.query }}
+  </p>
+  <script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
+  <script>
+    var data = {{ data.data|tojson|safe }};
+    var field = "{{ data.field }}";
+    var canvas = document.getElementById('bargraph');
+    var ctx = canvas.getContext('2d');
+    var opts = {
+      barh: 8,
+      barw: 440,
+      gutter: 4
+    };
+    opts.height = opts.barh + opts.gutter;
+
+    // resize canvas to fit data
+    canvas.setAttribute('height', opts.height*data.length);
+
+    ctx.textBaseline = "top";
+    ctx.textAlign = "right";
+    var max = _(data).chain().pluck('count').max().value();
+    _(data).each(function(d,i) {
+      ctx.fillRect(500-opts.barw, opts.height*i, opts.barw*d['count']/max, opts.barh);
+      ctx.fillText(d[field], 500-opts.barw-opts.gutter, opts.height*i-opts.gutter/2);
+    });
+  </script>
+</html>
