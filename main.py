@@ -41,14 +41,14 @@ def query():
     return json.dumps(result)
 
 @app.route('/query/uniq/<field>')
-def get_uniqs(field):
+def query_uniqs(field):
     query_string = 'select %(field)s, count(*) from hmda2009 group by %(field)s' % {'field': field}
     print 'query> ', query_string
     result = query_db(query_string)
     return json.dumps(result)
 
 @app.route('/bargraph/uniq/<field>')
-def get_uniqs(field):
+def graph_uniqs(field):
     query_string = 'select %(field)s, count(*) as "count" from hmda2009 group by %(field)s' % {'field': field}
     print 'graph> ', query_string
     result = query_db(query_string)
