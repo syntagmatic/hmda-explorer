@@ -1,0 +1,75 @@
+<html>
+  <style>
+    body {
+      font-family: Consolas, Menlo, Monospace;
+    }
+  </style>
+  <h3>Breakdown by {{ data.x }}, {{ data.y }}</h3>
+
+  <p>
+    x:{{ data.meta.x }} | xbin:{{ data.meta.xbin }}<br/>
+    y:{{ data.meta.y }} | ybin:{{ data.meta.ybin }}
+  </p>
+
+  <canvas id="punchcard" height="100" width="500"></canvas>
+  <p>
+    <strong>Query</strong><br/>
+    {{ data.query }}
+  </p>
+  <script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
+  <script>
+    var data = {{ data.data|tojson|safe }};
+    var meta = {{ data.meta|tojson|safe }}
+    var x = {
+      field: meta.x,
+      bin: parseFloat(meta.xbin),
+      min: _(data).chain().pluck(meta.x).min().value(),
+      max: _(data).chain().pluck(meta.x).max().value(),
+    }
+    var y = {
+      field: meta.y,
+      bin: parseFloat(meta.ybin),
+      min: _(data).chain().pluck(meta.y).min().value(),
+      max: _(data).chain().pluck(meta.y).max().value(),
+    }
+
+    var canvas = document.getElementById('punchcard');
+    var ctx = canvas.getContext('2d');
+
+    // resize canvas to fit data
+    canvas.setAttribute('width', 20*(x.max-x.min)/x.bin);
+    canvas.setAttribute('height', 20*(y.max-y.min)/y.bin);
+
+    var max = _(data).chain().pluck('count').max().value();
+    _(data).each(function(d,i) {
+        ctx.beginPath()
+        ctx.arc( 60+10*d[x.field]/x.bin,
+                 60+10*d[y.field]/y.bin,
+                 5*Math.pow(d['count']/max, 1/6),
+                 0,
+                 2*Math.PI,
+                 true )
+        ctx.fill();
+    });
+
+    // labels
+    ctx.fillText(y.field, 10, 70);
+    ctx.fillText(x.field, 80, 30);
+
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    var yrange = _.range(y.min, y.max, y.bin);
+    _(yrange).each(function(d,i) {
+      if (i % 2 == 0) ctx.fillText(d, 54, 60+10*i);
+    });
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+
+    var xrange = _.range(x.min, x.max, x.bin);
+    _(xrange).each(function(d,i) {
+      if (i % 4 == 0) ctx.fillText(d, 60+10*i, 54);
+    });
+  </script>
+</html>

@@ -96,6 +96,24 @@ def graph_freqs(field, limit = 500):
     }
     return render_template('bargraph.html', data=data)
 
+@app.route('/punchcard/<x>/<xbin>/<y>/<ybin>')
+def query_matrix(x, xbin, y, ybin):
+    query_string = 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
+    print query_string
+    result = query_db(query_string)
+    data = {
+      'query': query_string,
+      'data': result,
+      'meta': {
+        'x': x, 
+        'xbin': xbin, 
+        'y': y, 
+        'ybin': ybin, 
+      }
+    }
+    return render_template('punchcard.html', data=data)
+
+
 ############
 # INITIALIZE
 ############
