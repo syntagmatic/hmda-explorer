@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, request
 app = Flask(__name__)
 
 ##########
@@ -56,6 +56,21 @@ def query_schema(table):
 @app.route('/query/uniq/<field>')
 def query_uniqs(field):
     query_string = 'select %(field)s, count(*) from hmda2009 group by %(field)s' % {'field': field}
+    result = query_db(query_string)
+    return json.dumps(result)
+
+@app.route('/query/histogram/<field>/<bin>')
+def query_histogram(field, bin):
+    print bin
+    query_string = 'select round(%(field)s/%(bin)s)*%(bin)s as %(field)s, count(*) as "count" from hmda2009 group by round(%(field)s/%(bin)s)*%(bin)s' % {'field': field, 'bin': bin}
+    print query_string
+    result = query_db(query_string)
+    return json.dumps(result)
+
+@app.route('/query/matrix/<x>/<xbin>/<y>/<ybin>')
+def query_matrix(x, xbin, y, ybin):
+    query_string = 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
+    print query_string
     result = query_db(query_string)
     return json.dumps(result)
 
