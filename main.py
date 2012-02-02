@@ -28,6 +28,9 @@ def query_db(query, args=(), one=False):
                for idx, value in enumerate(row)) for row in cur.fetchall()]
     return (rv[0] if rv else None) if one else rv
 
+def query_matrix_string(x, xbin, y, ybin):
+    return 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
+
 ########
 # ROUTES
 ########
@@ -36,6 +39,7 @@ def query_db(query, args=(), one=False):
 def hello_world():
     return 'hello'
 
+# queries
 @app.route('/query')
 def query():
     result = query_db('select * from hmda2009 limit 10')
@@ -62,18 +66,17 @@ def query_uniqs(field):
 @app.route('/query/histogram/<field>/<bin>')
 def query_histogram(field, bin):
     print bin
-    query_string = 'select round(%(field)s/%(bin)s)*%(bin)s as %(field)s, count(*) as "count" from hmda2009 group by round(%(field)s/%(bin)s)*%(bin)s' % {'field': field, 'bin': bin}
-    print query_string
+    query_string = query_matrix_string(x, xbin, y, ybin)
     result = query_db(query_string)
     return json.dumps(result)
 
 @app.route('/query/matrix/<x>/<xbin>/<y>/<ybin>')
 def query_matrix(x, xbin, y, ybin):
     query_string = 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
-    print query_string
     result = query_db(query_string)
     return json.dumps(result)
 
+# graphs
 @app.route('/bargraph/uniq/<field>')
 def graph_uniqs(field):
     query_string = 'select %(field)s, count(*) as "count" from hmda2009 group by %(field)s' % {'field': field}
@@ -97,13 +100,8 @@ def graph_freqs(field, limit = 500):
     return render_template('bargraph.html', data=data)
 
 @app.route('/punchcard/<x>/<xbin>/<y>/<ybin>')
-def query_matrix(x, xbin, y, ybin):
-    query_string = 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
-    print query_string
-    result = query_db(query_string)
+def punchcard(x, xbin, y, ybin):
     data = {
-      'query': query_string,
-      'data': result,
       'meta': {
         'x': x, 
         'xbin': xbin, 

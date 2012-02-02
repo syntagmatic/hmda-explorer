@@ -11,7 +11,7 @@
     <strong>Query</strong><br/>
     {{ data.query }}
   </p>
-  <script src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
+  <script src="/static/underscore.js"></script>
   <script>
     var data = {{ data.data|tojson|safe }};
     var field = "{{ data.field }}";
