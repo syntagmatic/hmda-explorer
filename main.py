@@ -1,13 +1,13 @@
 import sqlite3
 import json
 from flask import Flask, g, render_template, request
+
 app = Flask(__name__)
+DATABASE = 'data/hmda2009.db'
 
 ##########
 # DATABASE
 ##########
-
-DATABASE = 'data/hmda2009.db'
 
 def connect_db():
     return sqlite3.connect(DATABASE)
@@ -28,20 +28,27 @@ def query_db(query, args=(), one=False):
                for idx, value in enumerate(row)) for row in cur.fetchall()]
     return (rv[0] if rv else None) if one else rv
 
-def query_matrix_string(x, xbin, y, ybin):
-    return 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
+class Query:
+    def freq(_, field, limit):
+        return 'select %(field)s, count(*) as "count" from hmda2009 group by %(field)s order by count(*) desc limit %(limit)s' % {'field': field, 'limit': limit}
+    def histogram(_, x, bin):
+        return 'select round(%(x)s/%(bin)s)*%(bin)s as %(x)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(bin)s)*%(bin)s' % {'x': x, 'bin': bin}
+    def matrix(_, x, xbin, y, ybin):
+        return 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
 
-########
-# ROUTES
-########
+query = Query()
+
+##############
+# QUERY ROUTES
+##############
 
 @app.route('/')
 def hello_world():
     return 'hello'
 
 # queries
-@app.route('/query')
-def query():
+@app.route('/query/')
+def query_reg():
     result = query_db('select * from hmda2009 limit 10')
     return json.dumps(result)
 
@@ -63,20 +70,22 @@ def query_uniqs(field):
     result = query_db(query_string)
     return json.dumps(result)
 
-@app.route('/query/histogram/<field>/<bin>')
-def query_histogram(field, bin):
-    print bin
-    query_string = query_matrix_string(x, xbin, y, ybin)
+@app.route('/query/histogram/<x>/<bin>')
+def query_histogramx(x, bin):
+    query_string = query.histogram(x, bin)
     result = query_db(query_string)
     return json.dumps(result)
 
 @app.route('/query/matrix/<x>/<xbin>/<y>/<ybin>')
 def query_matrix(x, xbin, y, ybin):
-    query_string = 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
+    query_string = query.matrix(x, xbin, y, ybin)
     result = query_db(query_string)
     return json.dumps(result)
 
-# graphs
+#############
+# VIEW ROUTES
+#############
+
 @app.route('/bargraph/uniq/<field>')
 def graph_uniqs(field):
     query_string = 'select %(field)s, count(*) as "count" from hmda2009 group by %(field)s' % {'field': field}
@@ -90,7 +99,7 @@ def graph_uniqs(field):
 
 @app.route('/bargraph/freq/<field>/<limit>')
 def graph_freqs(field, limit = 500):
-    query_string = 'select %(field)s, count(*) as "count" from hmda2009 group by %(field)s order by count(*) desc limit %(limit)s' % {'field': field, 'limit': limit}
+    query_string = query.freq(field, limit)
     result = query_db(query_string)
     data = {
       'query': query_string,
