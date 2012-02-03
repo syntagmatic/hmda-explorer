@@ -18,8 +18,11 @@
   <script src="/static/zepto.js"></script>
   <script src="/static/ajax.js"></script>
   <script src="/static/event.js"></script>
+  <script src="/static/jsonh.js"></script>
   <script>
-    $.getJSON('/query/matrix/{{data.meta.x}}/{{data.meta.xbin}}/{{data.meta.y}}/{{data.meta.ybin}}', function(data) {
+    $.getJSON('/query/matrix/{{data.meta.x}}/{{data.meta.xbin}}/{{data.meta.y}}/{{data.meta.ybin}}?jsonh=true', function(datah) {
+      var data = jsonh.unpack(datah);
+
       $('#loading').hide();
 
       var meta = {{ data.meta|tojson|safe }}

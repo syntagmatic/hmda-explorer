@@ -2,6 +2,10 @@ import sqlite3
 import json
 from flask import Flask, g, render_template, request
 
+import sys
+sys.path.append('lib/')
+import jsonh
+
 app = Flask(__name__)
 DATABASE = 'data/hmda2009.db'
 
@@ -46,41 +50,48 @@ query = Query()
 def hello_world():
     return 'hello'
 
+def dumps(result):
+    compact = request.args.get('jsonh', False)
+    if compact:
+        return jsonh.dumps(result)
+    else:
+        return json.dumps(result)
+
 # queries
 @app.route('/query/')
 def query_reg():
     result = query_db('select * from hmda2009 limit 10')
-    return json.dumps(result)
+    return dumps(result)
 
 @app.route('/query/tables/')
 def query_tables():
     query_string = "SELECT * FROM sqlite_master WHERE type='table'"
     result = query_db(query_string)
-    return json.dumps(result)
+    return dumps(result)
 
 @app.route('/query/schema/<table>')
 def query_schema(table):
     query_string = 'pragma table_info(%s)' % table
     result = query_db(query_string)
-    return json.dumps(result)
+    return dumps(result)
 
 @app.route('/query/uniq/<field>')
 def query_uniqs(field):
     query_string = 'select %(field)s, count(*) from hmda2009 group by %(field)s' % {'field': field}
     result = query_db(query_string)
-    return json.dumps(result)
+    return dumps(result)
 
 @app.route('/query/histogram/<x>/<bin>')
 def query_histogramx(x, bin):
     query_string = query.histogram(x, bin)
     result = query_db(query_string)
-    return json.dumps(result)
+    return dumps(result)
 
 @app.route('/query/matrix/<x>/<xbin>/<y>/<ybin>')
 def query_matrix(x, xbin, y, ybin):
     query_string = query.matrix(x, xbin, y, ybin)
     result = query_db(query_string)
-    return json.dumps(result)
+    return dumps(result)
 
 #############
 # VIEW ROUTES
