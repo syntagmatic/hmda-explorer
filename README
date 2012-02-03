@@ -1,6 +1,0 @@
-# Start server
-python main.py
-
-# View breakdowns
-http://127.0.0.1:5000/bargraph/uniq/state
-http://127.0.0.1:5000/bargraph/uniq/app_inc

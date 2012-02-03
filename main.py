@@ -82,7 +82,7 @@ def query_uniqs(field):
     return dumps(result)
 
 @app.route('/query/histogram/<x>/<bin>')
-def query_histogramx(x, bin):
+def query_histogram(x, bin):
     query_string = query.histogram(x, bin)
     result = query_db(query_string)
     return dumps(result)
