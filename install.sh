@@ -5,3 +5,4 @@ sudo pip install --upgrade virtualenv
 
 # flask
 sudo pip install flask
+sudo pip install flask-uploads
