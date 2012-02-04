@@ -6,8 +6,10 @@ import sys
 sys.path.append('lib/')
 import jsonh
 
-app = Flask(__name__)
 DATABASE = 'data/hmda2009.db'
+
+app = Flask(__name__)
+app.config['DATABASE'] = DATABASE
 
 ##########
 # DATABASE
