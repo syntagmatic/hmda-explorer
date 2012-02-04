@@ -20,7 +20,7 @@ Views
   
   http://127.0.0.1:5000/bargraph/freq/app_inc
   
-  http://127.0.0.1:5000/bargraph/freq/app_inc/5/spread/0.25
+  http://127.0.0.1:5000/punchcard/app_inc/5/spread/0.25
 
 Queries
 =======
