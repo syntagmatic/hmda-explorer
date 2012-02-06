@@ -1,14 +1,26 @@
 import os
 from flask import Flask, session, escape, flash, request, render_template, redirect, url_for, send_from_directory
+from sqlalchemy import desc
 from werkzeug import secure_filename
+from datasets import Dataset, db
 
 UPLOAD_FOLDER = '/var/uploads'
-ALLOWED_EXTENSIONS = set(['txt','pdf','png','jpg','jpeg','gif']) 
+ALLOWED_EXTENSIONS = set(['db','csv','txt','pdf','png','jpg','jpeg','gif']) 
 
 app = Flask(__name__)
 app.secret_key = 'this is supposed to be secret but its obviously not'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['parameter_storage_class'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 256 * 1024 * 1024
+
+#########
+# UTILITY
+#########
+
+def row2dict(row):
+    d = {}
+    for col in row.__table__.columns.keys():
+        d[col] = getattr(row, col)
+    return d
 
 ########
 # UPLOAD
@@ -27,20 +39,24 @@ def uploaded_file(filename):
 def upload_file():
     if request.method == 'POST':
         file = request.files['file']
-        print file
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            dataset = Dataset(filename)
+            db.session.add(dataset)
+            db.session.commit()
             flash('uploaded: ' + url_for('uploaded_file', filename=filename))
-        return redirect(url_for('show_flashes'))
+        return redirect(url_for('datasets'))
           
     return render_template('upload.html')
     return '''
     '''
 
-@app.route('/flash')
-def show_flashes():
-    return render_template('flash.html')
+@app.route('/datasets')
+def datasets():
+    datasets = map(row2dict, Dataset.query.order_by(desc('last_modified')).all())
+    print datasets
+    return render_template('datasets.html', datasets=datasets)
 
 ############
 # INITIALIZE

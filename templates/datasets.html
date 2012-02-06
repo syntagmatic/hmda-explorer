@@ -1,0 +1,14 @@
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Filename</th>
+        <th>Last Modified</th>
+    </tr>
+    {% for dataset in datasets %}
+    <tr>
+        <td>{{ dataset.name }}</td>
+        <td>{{ dataset.filename }}</td>
+        <td>{{ dataset.last_modified }}</td>
+    </tr>
+    {% endfor %}
+</table>

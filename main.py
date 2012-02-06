@@ -125,10 +125,10 @@ def graph_freqs(field, limit = 500):
 def punchcard(x, xbin, y, ybin):
     data = {
       'meta': {
-        'x': x, 
-        'xbin': xbin, 
+        'x': x,
+        'xbin': xbin,
         'y': y, 
-        'ybin': ybin, 
+        'ybin': ybin,
       }
     }
     return render_template('punchcard.html', data=data)
