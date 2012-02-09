@@ -7,10 +7,14 @@
   </style>
   <h3>Punchcard Chart</h3>
 
+  <div style="position:absolute;right:40;text-align:center;">
+    Scale (counts)<br/>
+    <canvas id="punchcard-scale" height="40" width="440"></canvas>
+  </div>
   <p>
     x:{{ data.meta.x }} | xbin:{{ data.meta.xbin }}<br/>
     y:{{ data.meta.y }} | ybin:{{ data.meta.ybin }}<br/>
-    zero/null values have been filtered out
+    zero/null values have been filtered out<br/>
   </p>
 
   <div id="loading">Loading...</div>
@@ -85,11 +89,29 @@
           ctx.beginPath()
           ctx.arc( 60+10*d[x.field]/x.bin,
                    60+10*d[y.field]/y.bin,
-                   5.5*Math.pow(d['count']/max, 1/2),
+                   5*Math.pow(d['count']/max, 2/3),
                    0,
                    2*Math.PI,
                    true )
           ctx.fill();
+      });
+
+      // scale
+      var scale_canvas = document.getElementById('punchcard-scale');
+      var scale_ctx = scale_canvas.getContext('2d');
+      scale_ctx.textAlign = "center";
+      _(_.range(0,5,0.5)).each(function(r) {
+        scale_ctx.beginPath();
+        scale_ctx.arc( 20+80*r,
+                       5,
+                       r,
+                       0,
+                       2*Math.PI);
+        scale_ctx.fill();
+
+        scale_ctx.fillText( Math.round(max*Math.pow((r/5), 3/2)),
+                            20+80*r,
+                            23);
       });
     });
 
