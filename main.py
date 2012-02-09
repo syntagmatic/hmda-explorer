@@ -1,12 +1,12 @@
-import sqlite3
 import json
 from flask import Flask, g, render_template, request
+from sqlalchemy import create_engine, MetaData, Table
 
 import sys
 sys.path.append('lib/')
 import jsonh
 
-DATABASE = 'data/hmda2009.db'
+DATABASE = 'sqlite:///data/hmda2009.db'
 
 app = Flask(__name__)
 app.config['DATABASE'] = DATABASE
@@ -15,24 +15,25 @@ app.config['DATABASE'] = DATABASE
 # DATABASE
 ##########
 
-def connect_db():
-    return sqlite3.connect(DATABASE)
+engine = create_engine(DATABASE, convert_unicode=True)
+metadata = MetaData(bind=engine)
+
+hmda_table = Table('hmda2009', metadata, autoload=True)
 
 @app.before_request
 def before_request():
-    g.db = connect_db()
+    g.db = engine.connect()
 
 @app.teardown_request
 def teardown_request(exception):
     if hasattr(g, 'db'):
         g.db.close()
 
-def query_db(query, args=(), one=False):
-    print 'query> ', query
-    cur = g.db.execute(query, args)
-    rv = [dict((cur.description[idx][0], value)
-               for idx, value in enumerate(row)) for row in cur.fetchall()]
-    return (rv[0] if rv else None) if one else rv
+def query_db(query_string):
+    result = []
+    for row in g.db.execute(query_string):
+        result.append(row)
+    return result
 
 class Query:
     def freq(_, field, limit):
