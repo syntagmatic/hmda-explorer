@@ -1,13 +1,13 @@
 # pip
-sudo apt-get install python-pip python-dev build-essential 
-sudo pip install --upgrade pip 
-sudo pip install --upgrade virtualenv 
+apt-get install python-pip python-dev build-essential 
+pip install --upgrade pip 
+pip install --upgrade virtualenv 
 
 # flask
-sudo pip install flask
-sudo pip install flask-sqlalchemy
-#sudo pip install flask-uploads
+pip install flask
+pip install flask-sqlalchemy
 
-
-### TODO
-# make upload directory /var/uploads
+# dataset uploads
+mkdir /var/uploads
+mkdir /var/db
+python setup.py
