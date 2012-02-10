@@ -1,6 +1,6 @@
 import json
 from flask import Flask, g, render_template, request
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine, MetaData, Table, select, func
 
 import sys
 sys.path.append('lib/')
@@ -18,7 +18,17 @@ app.config['DATABASE'] = DATABASE
 engine = create_engine(DATABASE, convert_unicode=True)
 metadata = MetaData(bind=engine)
 
-hmda_table = Table('hmda2009', metadata, autoload=True)
+'''
+hmda = Table('hmda2009', metadata, autoload=True)
+db = engine.connect()
+#qu = select([hmda.c['app_inc'], hmda.c['spread']]).limit(10)
+qu = select([hmda.c['purch_type'], func.count(hmda.c['purch_type']).label('count')]).group_by('purch_type').order_by(hmda.c['purch_type'])
+print qu
+re = db.execute(qu)
+for row in re:
+    print dict(row.items())
+db.close()
+'''
 
 @app.before_request
 def before_request():
@@ -29,16 +39,20 @@ def teardown_request(exception):
     if hasattr(g, 'db'):
         g.db.close()
 
-def query_db(query_string):
+def proxy_to_obj(proxy):
     result = []
-    for row in g.db.execute(query_string):
+    for row in proxy:
         result.append(dict(row.items()))
     return result
+
+def query_db(query_string):
+    return proxy_to_obj(g.db.execute(query_string))
 
 class Query:
     def freq(_, field, limit):
         return 'select %(field)s, count(*) as "count" from hmda2009 group by %(field)s order by count(*) desc limit %(limit)s' % {'field': field, 'limit': limit}
     def histogram(_, x, bin):
+        #return hmda.count().group_by('app_inc')
         return 'select round(%(x)s/%(bin)s)*%(bin)s as %(x)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(bin)s)*%(bin)s' % {'x': x, 'bin': bin}
     def matrix(_, x, xbin, y, ybin):
         return 'select round(%(x)s/%(xbin)s)*%(xbin)s as %(x)s, round(%(y)s/%(ybin)s)*%(ybin)s as %(y)s, count(*) as "count" from hmda2009 group by round(%(x)s/%(xbin)s)*%(xbin)s, round(%(y)s/%(ybin)s)*%(ybin)s' % {'x': x, 'xbin': xbin, 'y': y, 'ybin': ybin}
