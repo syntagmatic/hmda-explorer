@@ -32,7 +32,7 @@ def teardown_request(exception):
 def query_db(query_string):
     result = []
     for row in g.db.execute(query_string):
-        result.append(row)
+        result.append(dict(row.items()))
     return result
 
 class Query:
